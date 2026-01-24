@@ -39,7 +39,7 @@ void clock_setup(void)
 
 	/* clock rate / 168000 to get 1mS interrupt rate */
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
-	systick_set_reload(8999);
+	systick_set_reload(10499);  /* (84MHz / 8) / 1000 - 1 */
 	systick_counter_enable();
 
 	/* this done last */

@@ -8,26 +8,24 @@ void ConfigureXGPIO()
     EJSet();
     SSSet();
     KIOSKSet();
-    gpio_set_mode(LED_GPIO_Port, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, LED_Pin);
-    gpio_set_mode(XX_GPIO_Port, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, XX_Pin);
-    gpio_set_mode(EJ_GPIO_Port, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, EJ_Pin);
-    gpio_set_mode(SS_GPIO_Port, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, SS_Pin);
-    gpio_set_mode(KIOSK_GPIO_Port, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, KIOSK_Pin);
-    
-    gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, TCK);
-    gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT_2_MHZ,
-                GPIO_CNF_OUTPUT_PUSHPULL, TMS);
-    gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT_2_MHZ,
-                GPIO_CNF_OUTPUT_PUSHPULL, TDI);
-    gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_INPUT,
-                GPIO_CNF_INPUT_PULL_UPDOWN, TDO);
-    gpio_set(JTAG_GPIO_PORT, TDO);
+    gpio_mode_setup(LED_GPIO_Port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_Pin);
+    gpio_set_output_options(LED_GPIO_Port, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, LED_Pin);
+    gpio_mode_setup(XX_GPIO_Port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, XX_Pin);
+    gpio_set_output_options(XX_GPIO_Port, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, XX_Pin);
+    gpio_mode_setup(EJ_GPIO_Port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, EJ_Pin);
+    gpio_set_output_options(EJ_GPIO_Port, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, EJ_Pin);
+    gpio_mode_setup(SS_GPIO_Port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, SS_Pin);
+    gpio_set_output_options(SS_GPIO_Port, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, SS_Pin);
+    gpio_mode_setup(KIOSK_GPIO_Port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, KIOSK_Pin);
+    gpio_set_output_options(KIOSK_GPIO_Port, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, KIOSK_Pin);
+
+    gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TCK);
+    gpio_set_output_options(JTAG_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TCK);
+    gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TMS);
+    gpio_set_output_options(JTAG_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TMS);
+    gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TDI);
+    gpio_set_output_options(JTAG_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TDI);
+    gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, TDO);
 }
 void SSSet()
 {

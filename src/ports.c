@@ -34,15 +34,13 @@ inline void DLY()
 
 void initPorts(void)
 {
-  gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, TCK);
-  gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, TMS);
-  gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, TDI);
-  gpio_set_mode(JTAG_GPIO_PORT, GPIO_MODE_INPUT,
-		      GPIO_CNF_INPUT_PULL_UPDOWN, TDO);
-  gpio_set(JTAG_GPIO_PORT, TDO);
+  gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TCK);
+  gpio_set_output_options(JTAG_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TCK);
+  gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TMS);
+  gpio_set_output_options(JTAG_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TMS);
+  gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TDI);
+  gpio_set_output_options(JTAG_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TDI);
+  gpio_mode_setup(JTAG_GPIO_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, TDO);
 }
 
 /* setPort:  Implement to set the named JTAG signal (p) to the new value (v).*/
@@ -116,7 +114,7 @@ void readByte(uint8_t *data)
 void waitTime(uint32_t microsec)
 {
 #if 1
-    static long tckCyclesPerMicrosec    = 72/10; /* must be at least 1 */
+    static long tckCyclesPerMicrosec    = 84/10; /* must be at least 1 */
     long        tckCycles   = microsec * tckCyclesPerMicrosec;
     long        i;
 

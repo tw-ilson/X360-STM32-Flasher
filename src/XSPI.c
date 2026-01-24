@@ -2,6 +2,7 @@
 #include "XGPIO.h"
 #include "Delay.h"
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/spi.h>
 
@@ -12,16 +13,12 @@ void XSPI_Setup(void)
 	EJSet();
 
 	/* Configure GPIOs: SS=PA4, SCK=PA5, MISO=PA6 and MOSI=PA7 */
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-			GPIO_CNF_OUTPUT_ALTFN_PUSHPULL,
-											GPIO5 |
-											GPIO7 );
-
-	gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT,
-			GPIO6);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO5 | GPIO6 | GPIO7);
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO5 | GPIO7);
+	gpio_set_af(GPIOA, GPIO_AF5, GPIO5 | GPIO6 | GPIO7);
 
 	/* Reset SPI, SPI_CR1 register cleared, SPI is disabled */
-	spi_reset(SPI1);
+	rcc_periph_reset_pulse(RST_SPI1);
 
 	/* Set up SPI in Master mode with:
 	* Clock baud rate: 1/64 of peripheral clock frequency

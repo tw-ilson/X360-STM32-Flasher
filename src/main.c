@@ -24,7 +24,8 @@
 #include <libopencm3/usb/cdc.h>
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/cm3/systick.h>
-#include <libopencm3/stm32/st_usbfs.h>
+#include <libopencm3/usb/dwc/otg_fs.h>
+#include <libopencm3/usb/dwc/otg_common.h>
 #include <string.h>
 #include "XGPIO.h"
 #include "XSPI.h"
@@ -104,7 +105,7 @@ static const struct usb_endpoint_descriptor data_endp[] = {{
 static const struct usb_interface_descriptor data_iface[] = {{
 	.bLength = USB_DT_INTERFACE_SIZE,
 	.bDescriptorType = USB_DT_INTERFACE,
-	.bInterfaceNumber = 1,
+	.bInterfaceNumber = 0,
 	.bAlternateSetting = 0,
 	.bNumEndpoints = 2,
 	.bInterfaceClass = USB_CLASS_DATA,
@@ -406,6 +407,8 @@ static void cdcacm_set_config(usbd_device *usbd_dev, uint16_t wValue)
 				USB_REQ_TYPE_VENDOR,
 				USB_REQ_TYPE_TYPE,
 				cdcacm_control_request);
+
+	gpio_set(GPIOC, GPIO13);  /* LED OFF = USB enumerated */
 }
 
 static void read_post()
@@ -446,21 +449,19 @@ static void read_post()
 
 int main(void)
 {
-
-	rcc_clock_setup_in_hse_8mhz_out_72mhz();
+	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
 
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOC);
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_SPI1);
+	rcc_periph_clock_enable(RCC_OTGFS);
 
-	/* Setup GPIOC Pin 12 to pull up the D+ high, so autodect works
-	 * with the bootloader.  The circuit is active low. */
-	gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_2_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO12);
-	gpio_clear(GPIOC, GPIO12);
-	gpio_set_mode(GPIOB, GPIO_MODE_INPUT, GPIO_CNF_OUTPUT_OPENDRAIN, GPIO9 | GPIO8 | GPIO7 | GPIO6 | GPIO5 | GPIO4 | GPIO13 | GPIO14);
-	gpio_set_mode(GPIOB, GPIO_MODE_INPUT, GPIO_CNF_OUTPUT_OPENDRAIN, GPIO2);
+	/* Setup USB OTG FS pins PA11 (D-) and PA12 (D+) */
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+	gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO9 | GPIO8 | GPIO7 | GPIO6 | GPIO5 | GPIO4 | GPIO13 | GPIO14);
+	gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO2);
 	is_jrp = gpio_get(GPIOB,GPIO2) != 0;
 	if(is_jrp)
 	{
@@ -469,11 +470,18 @@ int main(void)
 		dev.idProduct = 0x8338;
 	}
 
-	usbd_dev = usbd_init(&st_usbfs_v1_usb_driver, &dev, &config, usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
+	usbd_dev = usbd_init(&otgfs_usb_driver, &dev, &config, usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
+
+	/* Force B-session valid since Black Pill has no VBUS sensing circuit.
+	 * Keep driver's GCCFG settings, just add session override. */
+	OTG_FS_GCCFG |= (1 << 21);  /* Set NOVBUSSENS/VBDEN bit */
+	OTG_FS_GOTGCTL |= (1 << 6) | (1 << 7);  /* BVALOEN | BVALOVAL */
+
 	usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
 	clock_setup();
 	ConfigureXGPIO();
 	XSPI_Setup();
+	gpio_clear(GPIOC, GPIO13);  /* LED ON = waiting for USB enumeration */
 	while (1)
 	{
 		usbd_poll(usbd_dev);
@@ -484,7 +492,7 @@ int main(void)
 				xsvf_status = XSVF_STATUS_COMP;
 			else if(res > 0)
 				xsvf_status = XSVF_STATUS_ERR;
-		}	
+		}
 		read_post();
 	}
 }
